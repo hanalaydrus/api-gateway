@@ -21,10 +21,12 @@ package main
 import (
 	"log"
 	"os"
+	"io"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-	pb "google.golang.org/grpc/examples/helloworld/helloworld"
+	// pb "google.golang.org/grpc/examples/helloworld/helloworld"
+	pb "../helloworld"
 )
 
 const (
@@ -46,9 +48,19 @@ func main() {
 	if len(os.Args) > 1 {
 		name = os.Args[1]
 	}
-	r, err := c.SayHello(context.Background(), &pb.HelloRequest{Name: name})
+	stream, err := c.SayHello(context.Background(), &pb.HelloRequest{Name: name})
 	if err != nil {
 		log.Fatalf("could not greet: %v", err)
 	}
-	log.Printf("Greeting: %s", r.Message)
+	for {
+		helloReply, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			log.Fatalf("%v.ListFeatures(_) = _, %v", c, err)
+		}
+		log.Println("Greeting: %s", helloReply)
+	}
+	
 }

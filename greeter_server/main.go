@@ -57,7 +57,7 @@ type server struct{}
 
 // SayHello implements helloworld.GreeterServer
 func (s *server) SayHello(ctx context.Context, in *library.HelloRequest) (*library.HelloReply, error) {
-	grpc.SendHeader(ctx, metadata.Pairs("Pre-Response-Metadata", "Is-sent-as-headers-unary"))
+	grpc.SendHeader(ctx, metadata.Pairs("Access-Control-Allow-Origin", "*"))
 	grpc.SetTrailer(ctx, metadata.Pairs("Post-Response-Metadata", "Is-sent-as-trailers-unary"))
 
 	return &library.HelloReply{Message: "Hello " + in.Name}, nil
@@ -89,6 +89,7 @@ func main() {
 	library.RegisterGreeterServer(grpcServer, &server{})
 	grpclog.SetLogger(log.New(os.Stdout, "exampleserver: ", log.LstdFlags))
 	grpcweb.WithCorsForRegisteredEndpointsOnly(false)
+	// grpcweb.WithAllowedRequestHeaders("Access-Control-Allow-Headers")
 	wrappedServer := grpcweb.WrapServer(grpcServer)
 	handler := func(resp http.ResponseWriter, req *http.Request) {
 		wrappedServer.ServeHTTP(resp, req)
