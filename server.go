@@ -28,7 +28,7 @@ import (
 	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/metadata"
 
-	pb "../helloworld"
+	pb "./helloworld"
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	"google.golang.org/grpc/reflection"
 )
@@ -36,10 +36,11 @@ import (
 // server is used to implement helloworld.GreeterServer.
 type server struct{}
 
+
 // SayHello implements helloworld.GreeterServer
 func (s *server) SayHello(in *pb.HelloRequest, stream pb.Greeter_SayHelloServer) error {
 	stream.SendHeader(metadata.Pairs("Pre-Response-Metadata", "Is-sent-as-headers-stream"))
-	helloReply := &pb.HelloReply{Message: "Hello " + in.Name}
+	helloReply := &pb.HelloReply{Message: "Hello " + count}
 	for i := 0; i < 10; i++ {
 		if err := stream.Send(helloReply); err != nil {
 			return err

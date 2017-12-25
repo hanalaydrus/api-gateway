@@ -16,7 +16,7 @@
  *
  */
 
-package client
+package main
 
 import (
 	"log"
@@ -26,7 +26,7 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	// pb "google.golang.org/grpc/examples/helloworld/helloworld"
-	pb "../helloworld"
+	pb "./helloworld"
 )
 
 const (
@@ -34,11 +34,13 @@ const (
 	defaultName = "world"
 )
 
+var count = "0"
+
 func main() {
 	// Set up a connection to the server.
-	conn, err := grpc.Dial(address, grpc.WithInsecure())
-	if err != nil {
-		log.Fatalf("did not connect: %v", err)
+	conn, erro := grpc.Dial(address, grpc.WithInsecure())
+	if erro != nil {
+		log.Fatalf("did not connect: %v", erro)
 	}
 	defer conn.Close()
 	c := pb.NewGreeterClient(conn)
@@ -48,18 +50,19 @@ func main() {
 	if len(os.Args) > 1 {
 		name = os.Args[1]
 	}
-	stream, err := c.SayHello(context.Background(), &pb.HelloRequest{Name: name})
-	if err != nil {
-		log.Fatalf("could not greet: %v", err)
+	stream, erro := c.SayHello(context.Background(), &pb.HelloRequest{Name: name})
+	if erro != nil {
+		log.Fatalf("could not greet: %v", erro)
 	}
 	for {
-		helloReply, err := stream.Recv()
-		if err == io.EOF {
+		helloReply, erro := stream.Recv()
+		if erro == io.EOF {
 			break
 		}
-		if err != nil {
-			log.Fatalf("%v.ListFeatures(_) = _, %v", c, err)
+		if erro != nil {
+			log.Fatalf("%v.ListFeatures(_) = _, %v", c, erro)
 		}
+		count = helloReply.Message
 		log.Println("Car Count: ", helloReply.Message)
 	}
 	
