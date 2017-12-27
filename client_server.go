@@ -34,41 +34,79 @@ import (
 	"google.golang.org/grpc/metadata"
 
 	pb "./helloworld"
+	pb2 "./helloworld2"
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	"google.golang.org/grpc/reflection"
 )
 
 const (
-	address     = "localhost:50051"
+	addressVolume     = "localhost:50051"
+	addressDensity     = "localhost:50050"
 	defaultName = "world"
 )
 
 var count = "0"
 var prev_count = "-1"
 
+var density_state = "Lancar"
+var prev_density_state = "null"
+
 // server is used to implement helloworld.GreeterServer.
 type server struct{}
 
 // SayHello implements helloworld.GreeterServer
-func (s *server) SayHello(in *pb.HelloRequest, stream pb.Greeter_SayHelloServer) error {
+func (s *server) SayHello(in *pb2.HelloRequest, stream pb2.Greeter_SayHelloServer) error {
 	stream.SendHeader(metadata.Pairs("Pre-Response-Metadata", "Is-sent-as-headers-stream"))
 	for {
-		if prev_count != count {
-			helloReply := &pb.HelloReply{Message: count}
+		if ((prev_count != count) || (prev_density_state != density_state)) {
+			helloReply := &pb2.HelloReply{Volume: count, Density: density_state}
 			if err := stream.Send(helloReply); err != nil {
 				return err
 			}
 			log.Println("Sending")
 			prev_count = count
+			prev_density_state = density_state
 		}
 	}
 	stream.SetTrailer(metadata.Pairs("Post-Response-Metadata", "Is-sent-as-trailers-stream"))
 	return nil
 }
 
-func asClient() {
+func asClientDensity() {
 	////////// Client ////////////
-	conn, erro := grpc.Dial(address, grpc.WithInsecure())
+	conn, erro := grpc.Dial(addressDensity, grpc.WithInsecure())
+	if erro != nil {
+		log.Fatalf("did not connect: %v", erro)
+	}
+	defer conn.Close()
+	c := pb.NewGreeterClient(conn)
+
+	// Contact the server and print out its response.
+	name := defaultName
+	if len(os.Args) > 1 {
+		name = os.Args[1]
+	}
+	stream, erro := c.SayHello(context.Background(), &pb.HelloRequest{Name: name})
+	if erro != nil {
+		log.Fatalf("could not greet: %v", erro)
+	}
+	for {
+		helloReply, erro := stream.Recv()
+		if erro == io.EOF {
+			break
+		}
+		if erro != nil {
+			log.Fatalf("%v.ListFeatures(_) = _, %v", c, erro)
+		}
+		density_state = helloReply.Message
+		log.Println("Density: ", density_state)
+		time.Sleep(10 * time.Millisecond)
+	}
+}
+
+func asClientVolume() {
+	////////// Client ////////////
+	conn, erro := grpc.Dial(addressVolume, grpc.WithInsecure())
 	if erro != nil {
 		log.Fatalf("did not connect: %v", erro)
 	}
@@ -94,7 +132,7 @@ func asClient() {
 		}
 		count = helloReply.Message
 		log.Println("Car Count: ", count)
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(10 * time.Millisecond)
 	}
 }
 
@@ -102,7 +140,7 @@ func asServer() {
 	//////////// Server //////////////
 	port := 8080
 	s := grpc.NewServer()
-	pb.RegisterGreeterServer(s, &server{})
+	pb2.RegisterGreeterServer(s, &server{})
 	// Register reflection service on gRPC server.
 	reflection.Register(s)
 
@@ -122,6 +160,7 @@ func asServer() {
 }
 
 func main() {
-	go asClient()
+	go asClientVolume()
+	go asClientDensity()
 	asServer()
 }
