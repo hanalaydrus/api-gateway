@@ -73,8 +73,8 @@ func (s *server) SayHello(in *pb2.HelloRequest, stream pb2.Greeter_SayHelloServe
 }
 
 func asClientDensity() {
-	////////// Client ////////////
-	conn, erro := grpc.Dial(addressDensity, grpc.WithInsecure())
+	var withBlock = grpc.WithBlock()
+	conn, erro := grpc.Dial(addressDensity, grpc.WithInsecure(), withBlock)
 	if erro != nil {
 		log.Fatalf("did not connect: %v", erro)
 	}
@@ -106,7 +106,8 @@ func asClientDensity() {
 
 func asClientVolume() {
 	////////// Client ////////////
-	conn, erro := grpc.Dial(addressVolume, grpc.WithInsecure())
+	var withBlock = grpc.WithBlock()
+	conn, erro := grpc.Dial(addressVolume, grpc.WithInsecure(), withBlock)
 	if erro != nil {
 		log.Fatalf("did not connect: %v", erro)
 	}
