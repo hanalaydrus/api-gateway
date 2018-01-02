@@ -40,8 +40,9 @@ import (
 )
 
 const (
-	addressVolume     = "localhost:50051"
-	addressDensity     = "localhost:50050"
+	addressVolume = "localhost:50051"
+	addressDensity = "localhost:50050"
+	addressSemantic = "localhost:50049"
 	defaultName = "world"
 )
 
@@ -50,6 +51,9 @@ var prev_count = "-1"
 
 var density_state = "Lancar"
 var prev_density_state = "null"
+
+var semantic_state = ""
+var prev_semantic_state = "null"
 
 // server is used to implement helloworld.GreeterServer.
 type server struct{}
@@ -137,6 +141,38 @@ func asClientVolume() {
 	}
 }
 
+func asClientSemantic() {
+	var withBlock = grpc.WithBlock()
+	conn, erro := grpc.Dial(addressSemantic, grpc.WithInsecure(), withBlock)
+	if erro != nil {
+		log.Fatalf("did not connect: %v", erro)
+	}
+	defer conn.Close()
+	c := pb.NewGreeterClient(conn)
+
+	// Contact the server and print out its response.
+	name := defaultName
+	if len(os.Args) > 1 {
+		name = os.Args[1]
+	}
+	stream, erro := c.SayHello(context.Background(), &pb.HelloRequest{Name: name})
+	if erro != nil {
+		log.Fatalf("could not greet: %v", erro)
+	}
+	for {
+		helloReply, erro := stream.Recv()
+		if erro == io.EOF {
+			break
+		}
+		if erro != nil {
+			log.Fatalf("%v.ListFeatures(_) = _, %v", c, erro)
+		}
+		semantic_state = helloReply.Message
+		log.Println("Semantic: ", semantic_state)
+		time.Sleep(10 * time.Millisecond)
+	}
+}
+
 func asServer() {
 	//////////// Server //////////////
 	port := 8080
@@ -163,5 +199,6 @@ func asServer() {
 func main() {
 	go asClientVolume()
 	go asClientDensity()
+	go asClientSemantic()
 	asServer()
 }
