@@ -20,17 +20,17 @@ package main
 
 import (
 	"log"
-	"os"
+	// "os"
 	"io"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	// pb "google.golang.org/grpc/examples/helloworld/helloworld"
-	pb "./helloworld"
+	pb "../helloworld"
 )
 
 const (
-	address     = "localhost:50051"
+	address     = "localhost:8080"
 	defaultName = "world"
 )
 
@@ -46,11 +46,11 @@ func main() {
 	c := pb.NewGreeterClient(conn)
 
 	// Contact the server and print out its response.
-	name := defaultName
-	if len(os.Args) > 1 {
-		name = os.Args[1]
-	}
-	stream, erro := c.SayHello(context.Background(), &pb.HelloRequest{Name: name})
+	// name := defaultName
+	// if len(os.Args) > 1 {
+	// 	name = os.Args[1]
+	// }
+	stream, erro := c.SayHello(context.Background(), &pb.HelloRequest{Name: "2"})
 	if erro != nil {
 		log.Fatalf("could not greet: %v", erro)
 	}
