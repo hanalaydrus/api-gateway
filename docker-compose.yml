@@ -1,0 +1,26 @@
+version: '3'
+
+services:
+  api-gateway:
+    build: .
+    container_name: api-gateway
+    external_links:
+      - volume-service
+      - density-service
+      - semantic-service
+    ports:
+      - "8080:8080"
+    restart: always
+    networks:
+      - default
+      - volumeofvehiclescpp_default
+      - densityofvehicles_default
+      - semantic_default
+
+networks:
+  volumeofvehiclescpp_default:
+    external: true
+  densityofvehicles_default:
+    external: true
+  semantic_default:
+    external: true

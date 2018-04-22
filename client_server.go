@@ -32,18 +32,18 @@ import (
 	"google.golang.org/grpc/grpclog"
 	"google.golang.org/grpc/metadata"
 
-	pbs "./semanticContract"
-	pbv "./volumeContract"
-	pbd "./densityContract"
-	pbg "./gatewayContract"
+	pbs "api.gateway/semanticContract"
+	pbv "api.gateway/volumeContract"
+	pbd "api.gateway/densityContract"
+	pbg "api.gateway/gatewayContract"
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	"google.golang.org/grpc/reflection"
 )
 
 const (
-	addressVolume = "localhost:50051"
-	addressDensity = "localhost:50050"
-	addressSemantic = "localhost:50049"
+	addressVolume = "volume-service:50051"
+	addressDensity = "density-service:50050"
+	addressSemantic = "semantic-service:50049"
 )
 
 var timestamp = ""
@@ -188,7 +188,7 @@ func (s *server) SayHello(in *pbg.HelloRequest, stream pbg.Greeter_SayHelloServe
 				if err := stream.Send(helloReply); err != nil {
 					return err
 				}
-				fmt.Println("response : ",resp)
+				// fmt.Println("response : ",resp)
 		}
 	}
 	stream.SetTrailer(metadata.Pairs("Post-Response-Metadata", "Is-sent-as-trailers-stream"))
