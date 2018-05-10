@@ -170,12 +170,20 @@ func (s *server) SayHello(in *pbg.HelloRequest, stream pbg.Greeter_SayHelloServe
 	stream.SendHeader(metadata.Pairs("Pre-Response-Metadata", "Is-sent-as-headers-stream"))
 	ctx := stream.Context()
 	response := make(chan string)
+	responseVolume := make(chan string)
+	responseDensity := make(chan string)
+	responseSemantic := make(chan string)
+
 	if strings.ToLower(in.Type) == "volume" {
 		go asClientVolume(in.Id, response, ctx)
 	} else if strings.ToLower(in.Type) == "density" {
 		go asClientDensity(in.Id, response, ctx)
 	} else if strings.ToLower(in.Type) == "semantic" {
 		go asClientSemantic(in.Id, response, ctx)
+	} else if strings.ToLower(in.Type) == "all" {
+		go asClientVolume(in.Id, responseVolume, ctx)
+		go asClientDensity(in.Id, responseDensity, ctx)
+		go asClientSemantic(in.Id, responseSemantic, ctx)
 	}
 	for {
 		select{
@@ -183,12 +191,34 @@ func (s *server) SayHello(in *pbg.HelloRequest, stream pbg.Greeter_SayHelloServe
 				fmt.Println("close context")
 				return nil
 			default:
-				resp := <- response
-				helloReply := &pbg.HelloReply{Response: resp}
-				if err := stream.Send(helloReply); err != nil {
-					return err
+				if strings.ToLower(in.Type) == "all" {
+					type Message struct {
+						Volume string `json:"volume"`
+						Density string `json:"density"`
+						Semantic string `json:"semantic"`
+					}
+					respVolume := <- responseVolume
+					respDensity := <- responseDensity
+					respSemantic := <- responseSemantic
+
+					m := Message{Volume: respVolume, Density: respDensity, Semantic: respSemantic}
+					b, err := json.Marshal(m)
+					if err != nil {
+				        fmt.Printf("Error: %s", err)
+				        return err
+				    }
+
+					helloReply := &pbg.HelloReply{Response: string(b)}
+					if err := stream.Send(helloReply); err != nil {
+						return err
+					}
+				} else {
+					resp := <- response
+					helloReply := &pbg.HelloReply{Response: resp}
+					if err := stream.Send(helloReply); err != nil {
+						return err
+					}
 				}
-				// fmt.Println("response : ",resp)
 		}
 	}
 	stream.SetTrailer(metadata.Pairs("Post-Response-Metadata", "Is-sent-as-trailers-stream"))

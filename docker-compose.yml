@@ -13,14 +13,14 @@ services:
     restart: always
     networks:
       - default
-      - volumeofvehiclescpp_default
-      - densityofvehicles_default
+      - volume-of-vehicles-cpp_default
+      - density-of-vehicles_default
       - semantic_default
 
 networks:
-  volumeofvehiclescpp_default:
+  volume-of-vehicles-cpp_default:
     external: true
-  densityofvehicles_default:
+  density-of-vehicles_default:
     external: true
   semantic_default:
     external: true
